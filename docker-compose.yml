@@ -1,0 +1,50 @@
+version: "3.9"
+
+networks:
+  magure-studio-network:
+    name: magure-studio-network
+    driver: bridge
+  
+volumes:
+  postgres_magure:
+    name: postgres_magure
+  redis_magure:
+    name: redis_magure
+
+
+services:
+  magure-postgres-db:
+    image: postgres:15
+    container_name: magure-db
+    restart: always
+    environment:
+      POSTGRES_USER: magureuser
+      POSTGRES_PASSWORD: magure123
+      POSTGRES_DB: maguredb
+      POSTGRES_DB_PORT: 5432
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_magure:/var/lib/postgresql/data
+    networks:
+      - magure-studio-network
+
+  magure-redis:
+    image: redis/redis-stack-server:latest
+    container_name: magure-redis
+    environment:
+      - REDIS_ARGS=--requirepass redis123
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_magure:/data
+    networks:
+      - magure-studio-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redis123", "--raw", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+ 
