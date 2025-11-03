@@ -8,6 +8,8 @@ from users.models import UserProfile, RefreshTokenStore
 from users.serializers import UserSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 import uuid
 import hashlib
 import logging
@@ -15,7 +17,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class SignUPUserView(APIView):
+    authentication_classes = []
+    permission_classes = []
 
     def post(self, request):
         user_email = request.data.get("email")
@@ -89,6 +94,7 @@ class SignUPUserView(APIView):
         return response
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class LoginUserView(APIView):
     authentication_classes = []
     permission_classes = []
@@ -155,16 +161,23 @@ class LoginUserView(APIView):
         return response
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class LogoutUserView(APIView):
+    authentication_classes = []
+    permission_classes = []
 
     def post(self, request):
-        refresh_token_str = request.data.get("refresh")
+        # Get refresh token from HTTP-only cookie (same as refresh token endpoint)
+        refresh_token_str = request.COOKIES.get("refresh_token")
 
+        # If no refresh token cookie, just return success and clear any cookies
         if not refresh_token_str:
-            return Response(
-                {"error": "Refresh token is required."},
-                status=status.HTTP_400_BAD_REQUEST,
+            response = Response(
+                {"message": "Logout successful."}, status=status.HTTP_200_OK
             )
+            # Try to clear the cookie anyway
+            response.delete_cookie("refresh_token")
+            return response
 
         hashed_refresh = hashlib.sha256(refresh_token_str.encode()).hexdigest()
 
@@ -175,16 +188,23 @@ class LogoutUserView(APIView):
             # ⚡ Mark as revoked instead of deleting
             token_entry.revoked = True
             token_entry.save()
-            return Response(
+
+            # Create response and clear the refresh token cookie
+            response = Response(
                 {"message": "Logout successful."}, status=status.HTTP_200_OK
             )
+            response.delete_cookie("refresh_token")
+            return response
         except RefreshTokenStore.DoesNotExist:
-            return Response(
-                {"error": "Invalid or already revoked refresh token."},
-                status=status.HTTP_400_BAD_REQUEST,
+            # Even if token doesn't exist, clear the cookie and return success
+            response = Response(
+                {"message": "Logout successful."}, status=status.HTTP_200_OK
             )
+            response.delete_cookie("refresh_token")
+            return response
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class RefreshTokenView(APIView):
     authentication_classes = []
     permission_classes = []
