@@ -69,6 +69,8 @@ CSRF_TRUSTED_ORIGINS = [
 # Application definition
 
 INSTALLED_APPS = [
+    "channels",
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -86,6 +88,7 @@ INSTALLED_APPS = [
 # ...existing code...
 AUTH_USER_MODEL = "users.UserProfile"
 # ...existing code...
+ASGI_APPLICATION = "main.asgi.application"
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
@@ -209,12 +212,14 @@ CELERY_TASK_RESULT_EXPIRES = 3600 * 12  # 1 hour
 CELERY_CHORD_PROPAGATES = True
 CELERY_TASK_IGNORE_RESULT = False
 
-REDIS_URL = os.getenv("REDIS_URL", "redis://:redis123@redis:6379/1")
+REDIS_URL_LLM = os.getenv("REDIS_URL_LLM", "redis://:redis123@localhost:6379/0")
+REDIS_URL = os.getenv("REDIS_URL", "redis://:redis123@localhost:6379/1")
 
-CELERY_BROKER_URL = os.getenv("CELERY_URL", "redis://:redis123@redis:6379/0")
+
+CELERY_BROKER_URL = os.getenv("CELERY_URL", "redis://:redis123@localhost:6379/2")
 
 CELERY_RESULT_BACKEND = os.getenv(
-    "CELERY_RESULT_BACKEND", "redis://:redis123@redis:6379/0"
+    "CELERY_RESULT_BACKEND", "redis://:redis123@localhost:6379/2"
 )
 # Use Redis as Celery cache backend (instead of DB)
 CELERY_CACHE_BACKEND = "default"
@@ -241,4 +246,33 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
     "USER_ID_FIELD": "user_id",
     "USER_ID_CLAIM": "user_id",
+}
+
+# Django Channels Configuration
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [REDIS_URL],
+        },
+    },
+}
+
+# WebSocket Security Settings
+WEBSOCKET_SECURITY = {
+    "MAX_CONNECTIONS_PER_USER": 3,
+    "CONNECTION_TIMEOUT_HOURS": 2,
+    "ALLOWED_ORIGINS": [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        # Add your production domains here:
+        # "https://yourdomain.com",
+        # "https://www.yourdomain.com",
+    ],
+    "MAX_MESSAGE_SIZE": 512,  # bytes for ping/heartbeat messages
+    "LOG_SECURITY_EVENTS": True,
 }
