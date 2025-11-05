@@ -12,7 +12,7 @@ from users.models import UserProfile
 logger = logging.getLogger(__name__)
 
 
-class FrameStreamerConsumer(AsyncWebsocketConsumer):
+class ChatStreamerConsumer(AsyncWebsocketConsumer):
     """
     Secure Producer-Only WebSocket Consumer
 

@@ -1,7 +1,7 @@
 from celery import shared_task
 from responseGenerator.LLM import LLM
 from .utils import send_webhook
-from .frameStreamer import FrameStreamer
+from .chatStreamer import ChatStreamer
 from django.conf import settings
 from datetime import datetime
 import redis
@@ -26,7 +26,7 @@ def generate_response(self, prompt, llm, chat_id, user_id):
     """
 
     # Initialize secure WebSocket producer
-    streamer = FrameStreamer(user_id, chat_id)
+    streamer = ChatStreamer(user_id, chat_id)
     streamer.start()
 
     # Redis connection for task tracking
@@ -60,7 +60,7 @@ def generate_response(self, prompt, llm, chat_id, user_id):
                 "timestamp": datetime.now().isoformat(),
             },
         }
-
+        print("Response Payload:", response_payload)
         # Send final response via WebSocket
         if streamer.notify_task_completed(response_text):
             logger.info(

@@ -3,11 +3,12 @@ import json
 
 # utils/webhook_utils.py
 import requests
+from django.conf import settings
 
 
 def get_user_chat(user_id: str, chat_id: str):
     """Retrieve a specific chat record from Redis using user_id and chat_id."""
-    r = redis.Redis(host="localhost", port=6379, db=1)
+    r = redis.from_url(settings.REDIS_URL, decode_responses=True)
     key = f"llmChat:{user_id}:{chat_id}"
 
     # Fetch the hash directly
@@ -16,8 +17,7 @@ def get_user_chat(user_id: str, chat_id: str):
     if not data:
         return None  # Chat not found
 
-    # Decode byte values to strings
-    data = {k.decode(): v.decode() for k, v in data.items()}
+    # No need to decode — already strings
     data["chat_id"] = chat_id
     data["llm_object"] = json.loads(data["llm_object"])
 

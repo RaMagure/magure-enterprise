@@ -7,7 +7,7 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 
-class SecureFrameStreamer:
+class SecureChatStreamer:
     """
     Secure WebSocket Producer for LLM Response Streaming
 
@@ -216,4 +216,4 @@ class SecureFrameStreamer:
 
 
 # Backward compatibility alias
-FrameStreamer = SecureFrameStreamer
+ChatStreamer = SecureChatStreamer
