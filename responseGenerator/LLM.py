@@ -23,7 +23,7 @@ class LLM:
         if self.selected_model.lower().startswith("gpt"):
             self.model = OpenAI(
                 api_key=self.api_key,
-                model="o1-mini",
+                model="gpt-4o-mini",  # Changed from o1-mini to gpt-4o-mini for better compatibility
                 system_prompt="You are a helpful assistant. Reason step by step. read the past messages carefully for more personalized responses.",
             )
         elif self.selected_model.lower().startswith("gemini"):
